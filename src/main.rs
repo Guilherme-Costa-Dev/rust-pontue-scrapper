@@ -87,7 +87,7 @@ fn get_id() -> Result<String, Box<dyn Error>> {
         "#entity-content > div > div > div > nav > ul > li:nth-child(2) > a > span.icon > i",
     )?
     .click()?;
-    sleep(Duration::from_secs(5));
+    sleep(Duration::from_secs(10));
 
     let js_script = r#"
         Array.from(document.querySelectorAll('td[data-label="Nº"]'))
