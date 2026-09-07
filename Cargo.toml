@@ -1,0 +1,8 @@
+[package]
+name = "pontue-scrapper"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+headless_chrome = "1.0.22"
+lettre = "0.11.23"
