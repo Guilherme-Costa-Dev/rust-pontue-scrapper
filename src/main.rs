@@ -57,7 +57,7 @@ fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
 
 fn get_id() -> Result<String, Box<dyn Error>> {
     let options = LaunchOptionsBuilder::default()
-        .headless(false)
+        .headless(true)
         .args(vec![
             std::ffi::OsStr::new("--disable-gpu"),
             std::ffi::OsStr::new("--no-sandbox"),
