@@ -2,6 +2,7 @@ use headless_chrome::{Browser, LaunchOptionsBuilder};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 use serde_json::Value;
+use std::env;
 use std::error::Error;
 use std::fs;
 use std::thread::sleep;
@@ -18,12 +19,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         sleep(Duration::from_mins(10));
     }
-
     Ok(())
 }
 
 fn send_email() -> Result<(), Box<dyn Error>> {
-    let path = "/home/guilherme/rust-pontue-scrapper/config.json";
+    let user = env::var("USER")?;
+    let path = format!("/home/{user}/rust-pontue-scrapper/config.json");
     let config = fs::read_to_string(&path)?;
     let json: Value = serde_json::from_str(&config)?;
     let nome = json["nome"].as_str().unwrap_or_default();
@@ -48,7 +49,8 @@ fn send_email() -> Result<(), Box<dyn Error>> {
 }
 
 fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
-    let path = "/home/guilherme/rust-pontue-scrapper/last.txt";
+    let user = env::var("USER")?;
+    let path = format!("/home/{user}/rust-pontue-scrapper/last.txt");
     let ultimo_id = fs::read_to_string(&path).unwrap_or_default();
 
     if ultimo_id != id {
@@ -60,7 +62,8 @@ fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
 }
 
 fn get_id() -> Result<String, Box<dyn Error>> {
-    let path = "/home/guilherme/rust-pontue-scrapper/config.json";
+    let user = env::var("USER")?;
+    let path = format!("/home/{user}/rust-pontue-scrapper/config.json");
     let config = fs::read_to_string(path)?;
     let json: Value = serde_json::from_str(&config)?;
     let login = json["login"].as_str().unwrap_or_default();
