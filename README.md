@@ -16,7 +16,9 @@ Na raiz do projeto crie um arquivo chamado `config.json`. Este arquivo é obriga
 {
 	"nome": "Seu Nome Completo",
 	"email": "seu_email@gmail.com",
-	"google_app_key": "xxxx xxxx xxxx xxxx"
+	"google_app_key": "xxxx xxxx xxxx xxxx",
+    "login": "seu login do pontue",
+    "senha": "sua senha do pontue"
 }
 ```
 
