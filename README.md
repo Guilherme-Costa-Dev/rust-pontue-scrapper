@@ -8,9 +8,19 @@ Script automatizado em Rust para monitorar a plataforma Pontue. Ele verifica a e
 * **Google Chrome** ou **Chromium** instalado no sistema (exigido pela biblioteca `headless_chrome`).
 * Conta do Google com **Verificação em Duas Etapas** ativada (para gerar a Senha de Aplicativo).
 
+## Instalação
+
+Clone o repo na raiz do sistema `~/` e instale globalmente com cargo:
+
+```bash
+git clone https://github.com/Guilherme-Costa-Dev/rust-pontue-scrapper.git
+cd rust-pontue-scrapper
+cargo install --path .
+```
+
 ## Configuração
 
-Na raiz do projeto crie um arquivo chamado `config.json`. Este arquivo é obrigatório para o envio dos e-mails e deve seguir a estrutura abaixo:
+Na raiz do projeto crie um arquivo chamado `config.json`. Este arquivo é obrigatório para o envio dos e-mails e login na plataforma:
 
 ```json
 {
@@ -20,14 +30,4 @@ Na raiz do projeto crie um arquivo chamado `config.json`. Este arquivo é obriga
     "login": "seu login do pontue",
     "senha": "sua senha do pontue"
 }
-```
-
-## Instalação
-
-Clone o repo na raiz do sistema `~/` e instale globalmente com cargo:
-
-```bash
-git clone https://github.com/Guilherme-Costa-Dev/rust-pontue-scrapper.git
-cd rust-pontue-scrapper
-cargo install --path .
 ```
