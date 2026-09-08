@@ -24,7 +24,7 @@ Na raiz do projeto crie um arquivo chamado `config.json`. Este arquivo é obriga
 
 ## Instalação
 
-Clone o repo e instale globalmente com cargo:
+Clone o repo na raiz do sistema `~/` e instale globalmente com cargo:
 
 ```bash
 git clone https://github.com/Guilherme-Costa-Dev/rust-pontue-scrapper.git
