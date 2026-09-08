@@ -1,6 +1,7 @@
 use headless_chrome::{Browser, LaunchOptionsBuilder};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
+use serde_json::Value;
 use std::error::Error;
 use std::fs;
 use std::thread::sleep;
@@ -22,22 +23,25 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn send_email() -> Result<(), Box<dyn Error>> {
-    let email = Message::builder()
-        .from("Guilherme Cordeiro Costa <guilhermecosta030409@gmail.com>".parse()?)
-        .to("Guilherme Cordeiro Costa <guilhermecosta030409@gmail.com>".parse()?)
+    let config = fs::read_to_string("config.json")?;
+    let json: Value = serde_json::from_str(&config)?;
+    let nome = json["nome"].as_str().unwrap_or_default();
+    let email = json["email"].as_str().unwrap_or_default();
+    let key = json["google_app_key"].as_str().unwrap_or_default();
+
+    let email_struct = Message::builder()
+        .from(format!("{nome} <{email}>").parse()?)
+        .to(format!("{nome} <{email}>").parse()?)
         .subject("pontue-scrapper")
         .body(("Redação corrigida mano").to_string())?;
 
-    let creds = Credentials::new(
-        "guilhermecosta030409@gmail.com".to_string(),
-        "igkm fwgd abuu unaq".to_string(),
-    );
+    let creds = Credentials::new(email.to_string(), key.to_string());
 
     let mailer = SmtpTransport::relay("smtp.gmail.com")?
         .credentials(creds)
         .build();
 
-    mailer.send(&email)?;
+    mailer.send(&email_struct)?;
 
     Ok(())
 }

@@ -766,6 +766,8 @@ version = "0.1.0"
 dependencies = [
  "headless_chrome",
  "lettre",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
