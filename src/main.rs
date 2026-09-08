@@ -23,7 +23,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 fn send_email() -> Result<(), Box<dyn Error>> {
-    let config = fs::read_to_string("config.json")?;
+    let path = "/home/guilherme/rust-pontue-scrapper/config.json";
+    let config = fs::read_to_string(&path)?;
     let json: Value = serde_json::from_str(&config)?;
     let nome = json["nome"].as_str().unwrap_or_default();
     let email = json["email"].as_str().unwrap_or_default();
@@ -47,12 +48,11 @@ fn send_email() -> Result<(), Box<dyn Error>> {
 }
 
 fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
-    const FILE: &str = "last.txt";
-
-    let ultimo_id = fs::read_to_string(FILE).unwrap_or_default();
+    let path = "/home/guilherme/rust-pontue-scrapper/last.txt";
+    let ultimo_id = fs::read_to_string(&path).unwrap_or_default();
 
     if ultimo_id != id {
-        fs::write(FILE, id)?;
+        fs::write(&path, id)?;
         return Ok(true);
     } else {
         Ok(false)
@@ -60,7 +60,8 @@ fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
 }
 
 fn get_id() -> Result<String, Box<dyn Error>> {
-    let config = fs::read_to_string("config.json")?;
+    let path = "/home/guilherme/rust-pontue-scrapper/config.json";
+    let config = fs::read_to_string(path)?;
     let json: Value = serde_json::from_str(&config)?;
     let login = json["login"].as_str().unwrap_or_default();
     let senha = json["senha"].as_str().unwrap_or_default();
