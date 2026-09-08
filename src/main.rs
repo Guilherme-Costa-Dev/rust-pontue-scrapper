@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             send_email()?;
             break;
         }
-        sleep(Duration::from_mins(10));
+        sleep(Duration::from_mins(30));
     }
     Ok(())
 }
