@@ -33,8 +33,8 @@ fn send_email() -> Result<(), Box<dyn Error>> {
     let email_struct = Message::builder()
         .from(format!("{nome} <{email}>").parse()?)
         .to(format!("{nome} <{email}>").parse()?)
-        .subject("pontue-scrapper")
-        .body(("Redação corrigida mano").to_string())?;
+        .subject("rust-pontue-scrapper")
+        .body(("Redação nova corrigida").to_string())?;
 
     let creds = Credentials::new(email.to_string(), key.to_string());
 
