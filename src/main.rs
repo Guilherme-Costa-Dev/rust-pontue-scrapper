@@ -60,6 +60,11 @@ fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
 }
 
 fn get_id() -> Result<String, Box<dyn Error>> {
+    let config = fs::read_to_string("config.json")?;
+    let json: Value = serde_json::from_str(&config)?;
+    let login = json["login"].as_str().unwrap_or_default();
+    let senha = json["senha"].as_str().unwrap_or_default();
+
     let options = LaunchOptionsBuilder::default()
         .headless(true)
         .args(vec![
@@ -76,10 +81,10 @@ fn get_id() -> Result<String, Box<dyn Error>> {
     tab.navigate_to(&url)?;
 
     tab.wait_for_element("input[name='email']")?.click()?;
-    tab.type_str("2618175862700")?;
+    tab.type_str(login)?;
 
     tab.wait_for_element("input[type='password']")?.click()?;
-    tab.type_str("12345")?;
+    tab.type_str(senha)?;
 
     tab.press_key("Enter")?;
     sleep(Duration::from_secs(2));
