@@ -5,7 +5,6 @@ Script automatizado em Rust para monitorar a plataforma Pontue. Ele verifica a e
 ## Pré-requisitos
 
 * **Rust e Cargo** instalados (`rustup`).
-* **Google Chrome** ou **Chromium** instalado no sistema (exigido pela biblioteca `headless_chrome`).
 * Conta do Google com **Verificação em Duas Etapas** ativada (para gerar a Senha de Aplicativo).
 
 ## Instalação

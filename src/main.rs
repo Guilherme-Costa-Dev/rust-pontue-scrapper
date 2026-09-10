@@ -1,14 +1,15 @@
-use headless_chrome::{Browser, LaunchOptionsBuilder};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
-use serde::Deserialize;
+use reqwest::blocking::Client;
+use reqwest::header::{ACCEPT, HeaderMap, HeaderValue, ORIGIN, REFERER, USER_AGENT};
+use serde_json::{json, Value};
 use std::env;
 use std::error::Error;
 use std::fs;
 use std::thread::sleep;
 use std::time::Duration;
 
-#[derive(Deserialize)]
+#[derive(serde::Deserialize)]
 struct Config {
     nome: String,
     email: String,
@@ -23,11 +24,11 @@ fn main() {
         let mut mins = 60;
         {
             match get_id(&config) {
-                Ok(id) => {
+                Ok((id, nota)) => {
                     let novo = check_old(&id).expect("Falha ao checar last.txt");
                     if novo {
                         println!("Redação nova encontrada");
-                        match send_email(&config) {
+                        match send_email(&config, &nota) {
                             Ok(()) => {
                                 println!("Email enviado com sucesso");
                                 break;
@@ -44,7 +45,7 @@ fn main() {
                     }
                 }
                 Err(e) => {
-                    eprintln!("Falha ao pegar o ID {e}");
+                    eprintln!("Falha ao pegar o ID: {e}");
                     mins = 10;
                     println!("Tentando novamente em {mins} minutos")
                 }
@@ -62,7 +63,7 @@ fn load_config() -> Result<Config, Box<dyn Error>> {
     Ok(config)
 }
 
-fn send_email(config: &Config) -> Result<(), Box<dyn Error>> {
+fn send_email(config: &Config, nota: &String) -> Result<(), Box<dyn Error>> {
     let nome = &config.nome;
     let email = &config.email;
     let key = &config.google_app_key;
@@ -70,7 +71,7 @@ fn send_email(config: &Config) -> Result<(), Box<dyn Error>> {
         .from(format!("{nome} <{email}>").parse()?)
         .to(format!("{nome} <{email}>").parse()?)
         .subject("rust-pontue-scrapper")
-        .body(("Redação nova corrigida").to_string())?;
+        .body(format!("Redação nova corrigida. Nota: {nota}").to_string())?;
 
     let creds = Credentials::new(email.to_string(), key.to_string());
 
@@ -96,41 +97,43 @@ fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
     }
 }
 
-fn get_id(config: &Config) -> Result<String, Box<dyn Error>> {
-    let options = LaunchOptionsBuilder::default()
-        .headless(true)
-        .args(vec![
-            std::ffi::OsStr::new("--disable-gpu"),
-            std::ffi::OsStr::new("--no-sandbox"),
-            std::ffi::OsStr::new("--disable-dev-shm-usage"),
-        ])
-        .build()?;
+fn get_id(config: &Config) -> Result<(String, String), Box<dyn Error>> {
+    let login = &config.login;
+    let senha = &config.senha;
 
-    let browser = Browser::new(options)?;
-    let url = "https://app.pontue.com.br/login";
-    let tab = browser.new_tab()?;
+    let mut headers = HeaderMap::new();
+    headers.insert(ORIGIN, HeaderValue::from_static("https://app.pontue.com.br"));
+    headers.insert(REFERER, HeaderValue::from_static("https://app.pontue.com.br/"));
+    headers.insert(
+        USER_AGENT, 
+        HeaderValue::from_static("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36")
+    );
+    headers.insert(ACCEPT, HeaderValue::from_static("application/json"));
 
-    tab.navigate_to(&url)?;
+    let login = json!({
+        "email": login,
+        "password": senha
+    });
 
-    tab.wait_for_element("input[name='email']")?.click()?;
-    tab.type_str(&config.login)?;
+    let client = Client::builder().default_headers(headers).build()?;
 
-    tab.wait_for_element("input[type='password']")?.click()?;
-    tab.type_str(&config.senha)?;
+    let res = client
+        .post("https://api.pontue.com.br/auth/login")
+        .json(&login)
+        .send()?;
 
-    tab.press_key("Enter")?;
+    let json_response: Value = res.json()?;
+    let id = json_response["aluno"]["id"]
+        .as_str()
+        .unwrap_or("Falha ao pegar o ID");
+    let token = json_response["access_token"].as_str().unwrap_or("Falha ao pegar access_token");
+    let url = format!("https://api.pontue.com.br/alunos/{id}/redacaos/corrected");
 
-    tab.wait_for_element("#menu-left-student-show > a > span > i")?
-        .click()?;
+    let red = client.get(url).bearer_auth(token).send()?;
+    let json_redacoes: Value = red.json()?;
+    let redacao = &json_redacoes["data"][0];
+    let id = redacao["numero"].to_string();
+    let nota = redacao["correcao"]["nota_final"].to_string();
 
-    tab.wait_for_element(
-        "#entity-content > div > div > div > nav > ul > li:nth-child(2) > a > span.icon > i",
-    )?
-    .click()?;
-
-    let num = tab
-        .wait_for_element("td[data-label='Nº'")?
-        .get_inner_text()?;
-
-    Ok(num.to_string())
+    Ok((id, nota))
 }
