@@ -108,18 +108,10 @@ fn get_id(config: &Config) -> Result<String, Box<dyn Error>> {
     .click()?;
     sleep(Duration::from_secs(10));
 
-    let js_script = r#"
-        Array.from(document.querySelectorAll('td[data-label="Nº"]'))
-             .find(td => td.offsetParent !== null)
-             ?.textContent.trim() || ""
-    "#;
-
-    let result = tab.evaluate(js_script, false)?;
-
-    let num = result
-        .value
-        .and_then(|v| v.as_str().map(String::from))
+    let num = tab
+        .wait_for_element("td[data-label='Nº'")?
+        .get_inner_text()
         .unwrap_or_default();
 
-    Ok(num)
+    Ok(num.to_string())
 }
