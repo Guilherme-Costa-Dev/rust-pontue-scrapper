@@ -1,6 +1,6 @@
 # rust-pontue-scrapper
 
-Script automatizado em Rust para monitorar a plataforma Pontue. Ele verifica a existência de novas redações corrigidas a cada 10 minutos e envia uma notificação automática por e-mail assim que um novo ID de redação é detectado.
+Script automatizado em Rust para monitorar a plataforma Pontue. Ele verifica a existência de novas redações corrigidas a cada 60 minutos e envia uma notificação automática por e-mail assim que um novo ID de redação é detectado.
 
 ## Pré-requisitos
 
