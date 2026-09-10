@@ -1,20 +1,30 @@
 use headless_chrome::{Browser, LaunchOptionsBuilder};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
-use serde_json::Value;
+use serde::Deserialize;
 use std::env;
 use std::error::Error;
 use std::fs;
 use std::thread::sleep;
 use std::time::Duration;
 
+#[derive(Deserialize)]
+struct Config {
+    nome: String,
+    email: String,
+    login: String,
+    senha: String,
+    google_app_key: String,
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
+    let config: Config = load_config()?;
     loop {
-        let id = get_id()?;
+        let id = get_id(&config)?;
         let novo = check_old(&id)?;
 
         if novo {
-            send_email()?;
+            send_email(&config)?;
             break;
         }
         sleep(Duration::from_mins(30));
@@ -22,15 +32,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn send_email() -> Result<(), Box<dyn Error>> {
+fn load_config() -> Result<Config, Box<dyn Error>> {
     let user = env::var("USER")?;
     let path = format!("/home/{user}/rust-pontue-scrapper/config.json");
-    let config = fs::read_to_string(&path)?;
-    let json: Value = serde_json::from_str(&config)?;
-    let nome = json["nome"].as_str().unwrap_or_default();
-    let email = json["email"].as_str().unwrap_or_default();
-    let key = json["google_app_key"].as_str().unwrap_or_default();
+    let config_str = fs::read_to_string(path)?;
+    let config: Config = serde_json::from_str(&config_str)?;
+    Ok(config)
+}
 
+fn send_email(config: &Config) -> Result<(), Box<dyn Error>> {
+    let nome = &config.nome;
+    let email = &config.email;
+    let key = &config.google_app_key;
     let email_struct = Message::builder()
         .from(format!("{nome} <{email}>").parse()?)
         .to(format!("{nome} <{email}>").parse()?)
@@ -61,14 +74,7 @@ fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
     }
 }
 
-fn get_id() -> Result<String, Box<dyn Error>> {
-    let user = env::var("USER")?;
-    let path = format!("/home/{user}/rust-pontue-scrapper/config.json");
-    let config = fs::read_to_string(path)?;
-    let json: Value = serde_json::from_str(&config)?;
-    let login = json["login"].as_str().unwrap_or_default();
-    let senha = json["senha"].as_str().unwrap_or_default();
-
+fn get_id(config: &Config) -> Result<String, Box<dyn Error>> {
     let options = LaunchOptionsBuilder::default()
         .headless(true)
         .args(vec![
@@ -85,10 +91,10 @@ fn get_id() -> Result<String, Box<dyn Error>> {
     tab.navigate_to(&url)?;
 
     tab.wait_for_element("input[name='email']")?.click()?;
-    tab.type_str(login)?;
+    tab.type_str(&config.login)?;
 
     tab.wait_for_element("input[type='password']")?.click()?;
-    tab.type_str(senha)?;
+    tab.type_str(&config.senha)?;
 
     tab.press_key("Enter")?;
     sleep(Duration::from_secs(2));
