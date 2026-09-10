@@ -110,8 +110,7 @@ fn get_id(config: &Config) -> Result<String, Box<dyn Error>> {
 
     let num = tab
         .wait_for_element("td[data-label='Nº'")?
-        .get_inner_text()
-        .unwrap_or_default();
+        .get_inner_text()?;
 
     Ok(num.to_string())
 }
