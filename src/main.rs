@@ -56,7 +56,11 @@ fn main() {
 }
 
 fn load_config() -> Result<Config, Box<dyn Error>> {
-    let home = env::var("HOME")?;
+    let home = match env::var("HOME") {
+        Ok(home) => home,
+        Err(_) => env::var("USERPROFILE")?
+    };
+
     let path = format!("{home}/rust-pontue-scrapper/config.json");
     let config_str = fs::read_to_string(path)?;
     let config: Config = serde_json::from_str(&config_str)?;
@@ -85,7 +89,10 @@ fn send_email(config: &Config, nota: &String) -> Result<(), Box<dyn Error>> {
 }
 
 fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
-    let home = env::var("HOME")?;
+    let home = match env::var("HOME") {
+        Ok(home) => home,
+        Err(_) => env::var("USERPROFILE")?
+    };
     let path = format!("{home}/rust-pontue-scrapper/last.txt");
     let ultimo_id = fs::read_to_string(&path).unwrap_or_default();
 

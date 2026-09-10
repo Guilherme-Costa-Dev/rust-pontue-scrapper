@@ -880,16 +880,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 
 [[package]]
-name = "pontue-scrapper"
-version = "0.1.0"
-dependencies = [
- "lettre",
- "reqwest",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "potential_utf"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1065,6 +1055,16 @@ dependencies = [
  "libc",
  "untrusted",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "rust-pontue-scrapper"
+version = "0.1.0"
+dependencies = [
+ "lettre",
+ "reqwest",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
