@@ -17,24 +17,46 @@ struct Config {
     google_app_key: String,
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let config: Config = load_config()?;
+fn main() {
     loop {
-        let id = get_id(&config)?;
-        let novo = check_old(&id)?;
-
-        if novo {
-            send_email(&config)?;
-            break;
+        let mut mins = 60;
+        {
+            let config: Config = load_config().expect("Falha ao carregar config.json");
+            match get_id(&config) {
+                Ok(id) => {
+                    let novo = check_old(&id).expect("Falha ao checar last.txt");
+                    if novo {
+                        println!("Redação nova encontrada");
+                        match send_email(&config) {
+                            Ok(()) => {
+                                println!("Email enviado com sucesso");
+                                break;
+                            }
+                            Err(e) => {
+                                eprintln!("Falha ao enviar o email: {e}");
+                                mins = 10;
+                                println!("Tentando enviar novamente em {mins} minutos");
+                            }
+                        }
+                    } else {
+                        println!("Nenhuma redação nova encontrada");
+                        println!("Procurando novamente em {mins} minutos");
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Falha ao pegar o ID {e}");
+                    mins = 10;
+                    println!("Tentando novamente em {mins} minutos")
+                }
+            }
         }
-        sleep(Duration::from_mins(30));
+        sleep(Duration::from_mins(mins));
     }
-    Ok(())
 }
 
 fn load_config() -> Result<Config, Box<dyn Error>> {
-    let user = env::var("USER")?;
-    let path = format!("/home/{user}/rust-pontue-scrapper/config.json");
+    let home = env::var("HOME")?;
+    let path = format!("{home}/rust-pontue-scrapper/config.json");
     let config_str = fs::read_to_string(path)?;
     let config: Config = serde_json::from_str(&config_str)?;
     Ok(config)
@@ -62,8 +84,8 @@ fn send_email(config: &Config) -> Result<(), Box<dyn Error>> {
 }
 
 fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
-    let user = env::var("USER")?;
-    let path = format!("/home/{user}/rust-pontue-scrapper/last.txt");
+    let home = env::var("HOME")?;
+    let path = format!("{home}/rust-pontue-scrapper/last.txt");
     let ultimo_id = fs::read_to_string(&path).unwrap_or_default();
 
     if ultimo_id != id {
@@ -97,7 +119,6 @@ fn get_id(config: &Config) -> Result<String, Box<dyn Error>> {
     tab.type_str(&config.senha)?;
 
     tab.press_key("Enter")?;
-    sleep(Duration::from_secs(2));
 
     tab.wait_for_element("#menu-left-student-show > a > span > i")?
         .click()?;
@@ -106,7 +127,6 @@ fn get_id(config: &Config) -> Result<String, Box<dyn Error>> {
         "#entity-content > div > div > div > nav > ul > li:nth-child(2) > a > span.icon > i",
     )?
     .click()?;
-    sleep(Duration::from_secs(10));
 
     let num = tab
         .wait_for_element("td[data-label='Nº'")?
