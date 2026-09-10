@@ -21,37 +21,41 @@ struct Config {
 fn main() {
     let config: Config = load_config().expect("Falha ao carregar config.json");
     loop {
-        let mut mins = 60;
-        {
+            {
             match get_id(&config) {
                 Ok((id, nota)) => {
                     let novo = check_old(&id).expect("Falha ao checar last.txt");
                     if novo {
                         println!("Redação nova encontrada");
                         match send_email(&config, &nota) {
-                            Ok(()) => {
+                            Ok(_) => {
                                 println!("Email enviado com sucesso");
                                 break;
                             }
                             Err(e) => {
                                 eprintln!("Falha ao enviar o email: {e}");
-                                mins = 10;
-                                println!("Tentando enviar novamente em {mins} minutos");
+                                break;
                             }
                         }
                     } else {
                         println!("Nenhuma redação nova encontrada");
-                        println!("Procurando novamente em {mins} minutos");
+                        println!("Procurando novamente em 1h");
                     }
                 }
                 Err(e) => {
-                    eprintln!("Falha ao pegar o ID: {e}");
-                    mins = 10;
-                    println!("Tentando novamente em {mins} minutos")
+                    eprintln!("Falha ao pegar o ID da redação: {e}");
+                    match send_err_email(&config, e) {
+                        Ok(_) => {println!("Email enviado com sucesso")},
+                        Err(e) => {
+                            println!("Falha ao enviar o email: {e}");
+                            break;
+                        }
+                    }
+                    println!("Tentando novamente em 1h");
                 }
             }
         }
-        sleep(Duration::from_mins(mins));
+        sleep(Duration::from_mins(60));
     }
 }
 
@@ -65,6 +69,27 @@ fn load_config() -> Result<Config, Box<dyn Error>> {
     let config_str = fs::read_to_string(path)?;
     let config: Config = serde_json::from_str(&config_str)?;
     Ok(config)
+}
+
+fn send_err_email(config: &Config, e: Box<dyn Error>) -> Result<(), Box<dyn Error>> {
+    let nome = &config.nome;
+    let email = &config.email;
+    let key = &config.google_app_key;
+    let email_struct = Message::builder()
+        .from(format!("{nome} <{email}>").parse()?)
+        .to(format!("{nome} <{email}>").parse()?)
+        .subject("Erro no rust-pontue-scrapper")
+        .body(format!("Erro ao pegar o ID da redação: {e}").to_string())?;
+
+    let creds = Credentials::new(email.to_string(), key.to_string());
+
+    let mailer = SmtpTransport::relay("smtp.gmail.com")?
+        .credentials(creds)
+        .build();
+
+    mailer.send(&email_struct)?;
+
+    Ok(())
 }
 
 fn send_email(config: &Config, nota: &String) -> Result<(), Box<dyn Error>> {
@@ -87,6 +112,7 @@ fn send_email(config: &Config, nota: &String) -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
 
 fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
     let home = match env::var("HOME") {
@@ -130,10 +156,8 @@ fn get_id(config: &Config) -> Result<(String, String), Box<dyn Error>> {
         .send()?;
 
     let json_response: Value = res.json()?;
-    let id = json_response["aluno"]["id"]
-        .as_str()
-        .unwrap_or("Falha ao pegar o ID");
-    let token = json_response["access_token"].as_str().unwrap_or("Falha ao pegar access_token");
+    let id = json_response["aluno"]["id"].as_str().ok_or("Falha ao pegar o ID do aluno")?;
+    let token = json_response["access_token"].as_str().ok_or("Falha ao pegar o token do login")?;
     let url = format!("https://api.pontue.com.br/alunos/{id}/redacaos/corrected");
 
     let red = client.get(url).bearer_auth(token).send()?;
