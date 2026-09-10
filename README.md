@@ -16,6 +16,7 @@ git clone https://github.com/Guilherme-Costa-Dev/rust-pontue-scrapper.git
 cd rust-pontue-scrapper
 cargo install --path .
 ```
+*(Para instalar no windows, clone diretamente na pasta do seu usuario)*
 
 ## Configuração
 
