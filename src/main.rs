@@ -18,10 +18,10 @@ struct Config {
 }
 
 fn main() {
+    let config: Config = load_config().expect("Falha ao carregar config.json");
     loop {
         let mut mins = 60;
         {
-            let config: Config = load_config().expect("Falha ao carregar config.json");
             match get_id(&config) {
                 Ok(id) => {
                     let novo = check_old(&id).expect("Falha ao checar last.txt");
