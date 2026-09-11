@@ -21,7 +21,7 @@ struct Config {
 fn main() {
     let config: Config = load_config().expect("Falha ao carregar config.json");
     loop {
-            {
+        {
             match get_id(&config) {
                 Ok((id, nota)) => {
                     let novo = check_old(&id).expect("Falha ao checar last.txt");
@@ -33,11 +33,12 @@ fn main() {
                                 break;
                             }
                             Err(e) => {
-                                eprintln!("Falha ao enviar o email: {e}");
+                                println!("Falha ao enviar o email: {e}");
                                 break;
                             }
-                        }
-                    } else {
+                        }                         
+                    } 
+                    else {
                         println!("Nenhuma redação nova encontrada");
                         println!("Procurando novamente em 1h");
                     }
@@ -45,13 +46,15 @@ fn main() {
                 Err(e) => {
                     eprintln!("Falha ao pegar o ID da redação: {e}");
                     match send_err_email(&config, e) {
-                        Ok(_) => {println!("Email enviado com sucesso")},
+                        Ok(_) => {
+                            println!("Email enviado com sucesso");
+                            break;
+                        },
                         Err(e) => {
                             println!("Falha ao enviar o email: {e}");
-                            break;
                         }
                     }
-                    println!("Tentando novamente em 1h");
+                println!("Tentando novamente em 1h");
                 }
             }
         }
