@@ -14,7 +14,7 @@ Clone o repo na sua Home `~/` e instale globalmente com cargo:
 ```bash
 git clone https://github.com/Guilherme-Costa-Dev/rust-pontue-scrapper.git
 cd rust-pontue-scrapper
-cargo install --path .
+cargo build --release
 ```
 *(Para instalar no windows, clone diretamente na pasta do seu usuario)*
 

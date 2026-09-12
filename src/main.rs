@@ -3,7 +3,6 @@ use lettre::{Message, SmtpTransport, Transport};
 use reqwest::blocking::Client;
 use reqwest::header::{ACCEPT, HeaderMap, HeaderValue, ORIGIN, REFERER, USER_AGENT};
 use serde_json::{json, Value};
-use std::env;
 use std::error::Error;
 use std::fs;
 use std::thread::sleep;
@@ -63,12 +62,11 @@ fn main() {
 }
 
 fn load_config() -> Result<Config, Box<dyn Error>> {
-    let home = match env::var("HOME") {
-        Ok(home) => home,
-        Err(_) => env::var("USERPROFILE")?
-    };
-
-    let path = format!("{home}/rust-pontue-scrapper/config.json");
+    let mut path = std::env::current_exe()?;
+    path.pop();
+    path.pop();
+    path.pop();
+    path.push("config.json");
     let config_str = fs::read_to_string(path)?;
     let config: Config = serde_json::from_str(&config_str)?;
     Ok(config)
@@ -118,15 +116,14 @@ fn send_email(config: &Config, nota: &String) -> Result<(), Box<dyn Error>> {
 
 
 fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
-    let home = match env::var("HOME") {
-        Ok(home) => home,
-        Err(_) => env::var("USERPROFILE")?
-    };
-    let path = format!("{home}/rust-pontue-scrapper/last.txt");
+    let mut path = std::env::current_exe()?;
+    path.pop();
+    path.pop();
+    path.pop();
+    path.push("last.txt");
     let ultimo_id = fs::read_to_string(&path).unwrap_or_default();
-
     if ultimo_id != id {
-        fs::write(&path, id)?;
+        fs::write(path, id)?;
         return Ok(true);
     } else {
         Ok(false)
