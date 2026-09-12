@@ -9,18 +9,17 @@ Script automatizado em Rust para monitorar a plataforma Pontue. Ele verifica a e
 
 ## Instalação
 
-Clone o repo na sua Home `~/` e instale globalmente com cargo:
+Clone o repo e faça a build:
 
 ```bash
 git clone https://github.com/Guilherme-Costa-Dev/rust-pontue-scrapper.git
 cd rust-pontue-scrapper
 cargo build --release
 ```
-*(Para instalar no windows, clone diretamente na pasta do seu usuario)*
 
 ## Configuração
 
-Na raiz do projeto crie um arquivo chamado `config.json`. Este arquivo é obrigatório para o envio dos e-mails e login na plataforma:
+Na mesma pasta do executável, crie um arquivo chamado `config.json`. Este arquivo é obrigatório para o envio dos e-mails e login na plataforma:
 
 ```json
 {
