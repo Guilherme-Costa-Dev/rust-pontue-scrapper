@@ -64,8 +64,6 @@ fn main() {
 fn load_config() -> Result<Config, Box<dyn Error>> {
     let mut path = std::env::current_exe()?;
     path.pop();
-    path.pop();
-    path.pop();
     path.push("config.json");
     let config_str = fs::read_to_string(path)?;
     let config: Config = serde_json::from_str(&config_str)?;
@@ -117,8 +115,6 @@ fn send_email(config: &Config, nota: &String) -> Result<(), Box<dyn Error>> {
 
 fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
     let mut path = std::env::current_exe()?;
-    path.pop();
-    path.pop();
     path.pop();
     path.push("last.txt");
     let ultimo_id = fs::read_to_string(&path).unwrap_or_default();
