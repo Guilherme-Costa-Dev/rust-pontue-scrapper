@@ -19,7 +19,7 @@ cargo build --release
 
 ## Configuração
 
-Na mesma pasta do executável, crie um arquivo chamado `config.json`. Este arquivo é obrigatório para o envio dos e-mails e login na plataforma:
+Em `~/.config/rust-pontue-scrapper`, crie um arquivo chamado `config.json`. Este arquivo é obrigatório para o envio dos e-mails e login na plataforma:
 
 ```json
 {

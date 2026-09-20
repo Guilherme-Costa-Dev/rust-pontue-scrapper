@@ -4,7 +4,7 @@ use reqwest::blocking::Client;
 use reqwest::header::{ACCEPT, HeaderMap, HeaderValue, ORIGIN, REFERER, USER_AGENT};
 use serde_json::{json, Value};
 use std::error::Error;
-use std::fs;
+use std::{env, fs};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -22,11 +22,11 @@ fn main() {
     loop {
         {
             match get_id(&config) {
-                Ok((id, nota)) => {
+                Ok((id, nota, tema)) => {
                     let novo = check_old(&id).expect("Falha ao checar last.txt");
                     if novo {
                         println!("Redação nova encontrada");
-                        match send_email(&config, &nota) {
+                        match send_email(&config, &nota, &tema) {
                             Ok(_) => {
                                 println!("Email enviado com sucesso");
                                 break;
@@ -62,9 +62,8 @@ fn main() {
 }
 
 fn load_config() -> Result<Config, Box<dyn Error>> {
-    let mut path = std::env::current_exe()?;
-    path.pop();
-    path.push("config.json");
+    let user = env::var("USER")?;
+    let path = format!("/home/{user}/.config/rust-pontue-scrapper/config.json");
     let config_str = fs::read_to_string(path)?;
     let config: Config = serde_json::from_str(&config_str)?;
     Ok(config)
@@ -91,7 +90,7 @@ fn send_err_email(config: &Config, e: Box<dyn Error>) -> Result<(), Box<dyn Erro
     Ok(())
 }
 
-fn send_email(config: &Config, nota: &String) -> Result<(), Box<dyn Error>> {
+fn send_email(config: &Config, nota: &String, tema: &String) -> Result<(), Box<dyn Error>> {
     let nome = &config.nome;
     let email = &config.email;
     let key = &config.google_app_key;
@@ -99,7 +98,7 @@ fn send_email(config: &Config, nota: &String) -> Result<(), Box<dyn Error>> {
         .from(format!("{nome} <{email}>").parse()?)
         .to(format!("{nome} <{email}>").parse()?)
         .subject("rust-pontue-scrapper")
-        .body(format!("Redação nova corrigida. Nota: {nota}").to_string())?;
+        .body(format!("Redação nova corrigida: {tema} \n\n Nota: {nota}").to_string())?;
 
     let creds = Credentials::new(email.to_string(), key.to_string());
 
@@ -114,9 +113,8 @@ fn send_email(config: &Config, nota: &String) -> Result<(), Box<dyn Error>> {
 
 
 fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
-    let mut path = std::env::current_exe()?;
-    path.pop();
-    path.push("last.txt");
+    let user = env::var("USER")?;
+    let path = format!("/home/{user}/.config/rust-pontue-scrapper/id.txt");
     let ultimo_id = fs::read_to_string(&path).unwrap_or_default();
     if ultimo_id != id {
         fs::write(path, id)?;
@@ -126,7 +124,7 @@ fn check_old(id: &str) -> Result<bool, Box<dyn Error>> {
     }
 }
 
-fn get_id(config: &Config) -> Result<(String, String), Box<dyn Error>> {
+fn get_id(config: &Config) -> Result<(String, String, String), Box<dyn Error>> {
     let login = &config.login;
     let senha = &config.senha;
 
@@ -161,6 +159,8 @@ fn get_id(config: &Config) -> Result<(String, String), Box<dyn Error>> {
     let redacao = &json_redacoes["data"][0];
     let id = redacao["numero"].to_string();
     let nota = redacao["correcao"]["nota_final"].to_string();
+    let mut tema = redacao["proposta"]["nome"].as_str().unwrap_or("").to_string();
+    tema = tema.replace("3ª série /Pré - ENEM - ", "");
 
-    Ok((id, nota))
+    Ok((id, nota, tema))
 }
