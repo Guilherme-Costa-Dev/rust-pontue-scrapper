@@ -5,8 +5,6 @@ use reqwest::header::{ACCEPT, HeaderMap, HeaderValue, ORIGIN, REFERER, USER_AGEN
 use serde_json::{json, Value};
 use std::error::Error;
 use std::{env, fs};
-use std::thread::sleep;
-use std::time::Duration;
 
 #[derive(serde::Deserialize)]
 struct Config {
@@ -19,45 +17,39 @@ struct Config {
 
 fn main() {
     let config: Config = load_config().expect("Falha ao carregar config.json");
-    loop {
         {
-            match get_id(&config) {
-                Ok((id, nota, tema)) => {
-                    let novo = check_old(&id).expect("Falha ao checar last.txt");
-                    if novo {
-                        println!("Redação nova encontrada");
-                        match send_email(&config, &nota, &tema) {
-                            Ok(_) => {
-                                println!("Email enviado com sucesso");
-                                break;
-                            }
-                            Err(e) => {
-                                println!("Falha ao enviar o email: {e}");
-                                break;
-                            }
-                        }                         
-                    } 
-                    else {
-                        println!("Nenhuma redação nova encontrada");
-                        println!("Procurando novamente em 1h");
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Falha ao pegar o ID da redação: {e}");
-                    match send_err_email(&config, e) {
+        match get_id(&config) {
+            Ok((id, nota, tema)) => {
+                let novo = check_old(&id).expect("Falha ao checar last.txt");
+                if novo {
+                    println!("Redação nova encontrada");
+                    match send_email(&config, &nota, &tema) {
                         Ok(_) => {
                             println!("Email enviado com sucesso");
-                            break;
-                        },
+                        }
                         Err(e) => {
                             println!("Falha ao enviar o email: {e}");
                         }
-                    }
-                println!("Tentando novamente em 1h");
+                    }                         
+                } 
+                else {
+                    println!("Nenhuma redação nova encontrada");
+                    println!("Procurando novamente em 1h");
                 }
             }
+            Err(e) => {
+                eprintln!("Falha ao pegar o ID da redação: {e}");
+                match send_err_email(&config, e) {
+                    Ok(_) => {
+                        println!("Email enviado com sucesso");
+                    },
+                    Err(e) => {
+                        println!("Falha ao enviar o email: {e}");
+                    }
+                }
+            println!("Tentando novamente em 1h");
+            }
         }
-        sleep(Duration::from_mins(60));
     }
 }
 
